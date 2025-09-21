@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+werkzeug
+pydantic[email]
+python-jose
+requests
+nicegui
