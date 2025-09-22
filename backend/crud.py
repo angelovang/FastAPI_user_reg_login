@@ -1,5 +1,15 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from typing import Optional
+
+def authenticate_user(db: Session, username: str, password: str) -> Optional[models.User]:
+    """Връща потребителя, ако username и password са валидни, иначе None"""
+    user = db.query(models.User).filter(models.User.username == username).first()
+    if not user:
+        return None
+    if not user.check_password(password):
+        return None
+    return user
 
 def get_user_by_username(db: Session, username: str):
     return db.query(models.User).filter(models.User.username == username).first()

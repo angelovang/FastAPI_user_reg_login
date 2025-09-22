@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from . import models, schemas, crud
+from .auth import create_access_token
 from .database import engine, Base, SessionLocal
 
 Base.metadata.create_all(bind=engine)
@@ -14,6 +15,21 @@ def get_db():
     finally:
         db.close()
 
+
+@app.post("/login/")
+def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = crud.authenticate_user(db, user.username, user.password)
+    if not db_user:
+        raise HTTPException(status_code=401, detail="❌ Невалидно потребителско име или парола")
+
+    access_token = create_access_token(data={"sub": db_user.username})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "username": db_user.username,  # <-- добавено
+        "id": db_user.id  # <-- по желание
+    }
 @app.post("/users/", response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = crud.get_user_by_username(db, username=user.username)

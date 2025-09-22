@@ -4,6 +4,8 @@ import requests
 API_URL = "http://127.0.0.1:8000"
 token = None
 
+# проста глобална променлива за демо
+current_user = None
 
 # -------------------- Navbar --------------------
 def add_header():
@@ -84,10 +86,22 @@ def show_login():
         password = ui.input("Парола", password=True)
 
         def login_action():
-            global token
-            token = "fake_token"
-            ui.notify("✅ Успешно влязохте!")
-            ui.navigate.to('/dashboard')
+            global current_user
+            try:
+                response = requests.post("http://127.0.0.1:8000/login/", json={
+                    "username": username.value,
+                    "password": password.value,
+                })
+                if response.status_code == 200:
+                    current_user = response.json()  # запазваме данните
+                    ui.notify("✅ Успешно влязохте!")
+                    ui.navigate.to('/dashboard')
+                elif response.status_code == 401:
+                    ui.notify("❌ Невалидно потребителско име или парола")
+                else:
+                    ui.notify(f"⚠️ Грешка при вход: {response.text}")
+            except Exception as e:
+                ui.notify(f"⚠️ Няма връзка със сървъра: {e}")
 
         ui.button("Влез", on_click=login_action)
         ui.button("⬅️ Назад", on_click=lambda: ui.navigate.to('/'))
@@ -95,8 +109,14 @@ def show_login():
 
 def show_dashboard():
     """Dashboard с отделни редове и бутони за всеки ред"""
+    global current_user
+    if not current_user:  # ако няма логнат
+        ui.notify("⚠️ Трябва първо да влезете!")
+        ui.navigate.to('/login')
+        return
+
     with ui.card().classes("p-8 flex flex-col gap-4 shadow-xl w-full max-w-4xl"):
-        ui.label("📋 Табло - Управление на потребители").classes("text-xl font-bold")
+        ui.label(f"📋 Таблица потребители - Здравей, {current_user['username']} ! ").classes("text-xl font-bold")
 
         # Контейнер за редовете
         rows_container = ui.column().classes("gap-2")
