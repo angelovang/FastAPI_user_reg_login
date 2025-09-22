@@ -1,5 +1,6 @@
 from nicegui import ui
 import requests
+import httpx
 
 API_URL = "http://127.0.0.1:8000"
 token = None
@@ -79,6 +80,7 @@ def show_register():
         ui.button("⬅️ Назад", on_click=lambda: ui.navigate.to('/'))
 
 
+'''
 def show_login():
     with ui.card().classes("p-8 flex flex-col items-center gap-4 shadow-xl"):
         ui.label("Вход").classes("text-xl font-bold")
@@ -105,8 +107,42 @@ def show_login():
 
         ui.button("Влез", on_click=login_action)
         ui.button("⬅️ Назад", on_click=lambda: ui.navigate.to('/'))
+'''
+
+def show_login():
+    with ui.card().classes("p-8 flex flex-col items-center gap-4 shadow-xl"):
+        ui.label("Вход").classes("text-xl font-bold")
+        username = ui.input("Потребителско име")
+        password = ui.input("Парола", password=True)
+
+        async def login_action():
+            async with httpx.AsyncClient() as client:
+                try:
+                    response = await client.post(
+                        "http://localhost:8000/login/",
+                        json={"username": username.value, "password": password.value},
+                    )
+                    if response.status_code == 200:
+                        data = response.json()
+                        # използваме сесия от клиента
+                        session = ui.context.client.storage
+                        session["token"] = data["access_token"]
+                        session["token_type"] = data.get("token_type", "bearer")
+                        session["username"] = data["username"]
+                        session["id"] = data["id"]
+
+                        ui.notify(f"✅ Успешно влязохте като {data['username']}!")
+                        ui.navigate.to("/dashboard")
+                    else:
+                        ui.notify("❌ Невалидни данни за вход!", color="negative")
+                except Exception as e:
+                    ui.notify(f"⚠️ Грешка при връзка със сървъра: {e}", color="negative")
+
+        ui.button("Влез", on_click=login_action)
+        ui.button("⬅️ Назад", on_click=lambda: ui.navigate.to('/'))
 
 
+'''
 def show_dashboard():
     """Dashboard с отделни редове и бутони за всеки ред"""
     global current_user
@@ -207,7 +243,78 @@ def show_dashboard():
 
         # --- Първоначално зареждане ---
         refresh_rows()
+'''
 
+def show_dashboard():
+    session = ui.context.client.storage
+    username = session.get("username", "гост")
+
+    with ui.card().classes("p-8 flex flex-col gap-4 shadow-xl w-full max-w-4xl"):
+        ui.label(f"📋 Табло потребители - Здравей, {username}!").classes("text-xl font-bold")
+
+        rows_container = ui.column().classes("gap-2")
+
+        # --- обновяване на редовете ---
+        def refresh_rows():
+            rows_container.clear()
+            try:
+                users = get_users()  # извиква backend-а
+                for user in users:
+                    with rows_container:
+                        with ui.row().classes("items-center gap-4 border-b py-2"):
+                            ui.label(str(user['id'])).classes("w-8")
+                            ui.label(user['username']).classes("w-48")
+                            ui.label(user['email']).classes("w-64")
+                            with ui.row().classes("gap-2"):
+                                ui.button("✏️", on_click=lambda u=user: edit_user_dialog(u)).props(
+                                    'flat dense round icon=edit')
+                                ui.button("🗑️", on_click=lambda u=user: delete_user_action(u)).props(
+                                    'flat dense round icon=delete color=red')
+            except Exception as e:
+                ui.notify(f"⚠️ Грешка при зареждане на потребители: {e}", color="negative")
+
+        # --- редакция ---
+        def edit_user_dialog(user):
+            with ui.dialog() as dialog, ui.card():
+                ui.label(f"Редакция на {user['username']}").classes("text-xl")
+                username_input = ui.input("Потребителско име", value=user['username'])
+                email_input = ui.input("Имейл", value=user['email'])
+
+                def save():
+                    if update_user(user['id'], username_input.value, email_input.value):
+                        ui.notify("✅ Потребителят е обновен!")
+                        refresh_rows()
+                    else:
+                        ui.notify("❌ Грешка при обновяване!")
+                    dialog.close()
+
+                def confirm_delete():
+                    with ui.dialog() as confirm, ui.card():
+                        ui.label("Сигурни ли сте, че искате да изтриете този потребител?").classes("text-lg")
+                        with ui.row().classes("justify-end gap-4"):
+                            ui.button("❌ Откажи", on_click=confirm.close)
+                            ui.button("🗑️ Изтрий", on_click=lambda: (
+                                delete_user_action(user), confirm.close(), dialog.close()
+                            )).classes("bg-red-500 text-white")
+
+                    confirm.open()
+
+                with ui.row().classes("gap-4 justify-between"):
+                    ui.button("Запази", on_click=save).classes("bg-green-500 text-white px-4 py-1 rounded")
+                    ui.button("Изтрий", on_click=confirm_delete).classes("bg-red-500 text-white px-4 py-1 rounded")
+                    ui.button("Откажи", on_click=dialog.close).classes("bg-gray-300 px-4 py-1 rounded")
+
+            dialog.open()
+
+        # --- изтриване ---
+        def delete_user_action(user):
+            if delete_user(user['id']):
+                ui.notify("✅ Потребителят е изтрит!")
+                refresh_rows()
+            else:
+                ui.notify("❌ Грешка при изтриване!")
+
+        refresh_rows()
 
 # -------------------- Страници --------------------
 @ui.page('/')
