@@ -77,7 +77,21 @@ def show_register():
         username = ui.input("Потребителско име")
         email = ui.input("Имейл")
         password = ui.input("Парола", password=True)
-        ui.button("Регистрирай", on_click=lambda: register(username.value, email.value, password.value))
+
+        def validate_and_register():
+            if len(username.value.strip()) < 3:
+                ui.notify("⚠️ Потребителското име трябва да е поне 3 символа")
+                return
+            if "@" not in email.value or "." not in email.value:
+                ui.notify("⚠️ Въведете валиден имейл")
+                return
+            if len(password.value.strip()) < 6:
+                ui.notify("⚠️ Паролата трябва да е поне 6 символа")
+                return
+            # ако всичко е ок → извикай backend API
+            register(username.value, email.value, password.value)
+
+        ui.button("Регистрирай", on_click=validate_and_register)
         ui.button("⬅️ Назад", on_click=lambda: ui.navigate.to('/'))
 
 
@@ -88,6 +102,12 @@ def show_login():
         password = ui.input("Парола", password=True)
 
         async def login_action():
+            if len(username.value.strip()) < 3:
+                ui.notify("⚠️ Потребителското име трябва да е поне 3 символа")
+                return
+            if len(password.value.strip()) < 4:
+                ui.notify("⚠️ Паролата трябва да е поне 6 символа")
+                return
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.post(
@@ -119,7 +139,7 @@ def show_dashboard():
     username = session.get("username", "гост")
 
     with ui.card().classes("p-8 flex flex-col gap-4 shadow-xl w-full max-w-4xl"):
-        ui.label(f"📋 Табло потребители - Здравей, {username}!").classes("text-xl font-bold")
+        ui.label(f"📋 Таблица потребители").classes("text-xl font-bold")
 
         rows_container = ui.column().classes("gap-2")
 
@@ -136,9 +156,9 @@ def show_dashboard():
                             ui.label(user['email']).classes("w-64")
                             with ui.row().classes("gap-2"):
                                 ui.button("✏️", on_click=lambda u=user: edit_user_dialog(u)).props(
-                                    'flat dense round icon=edit')
-                                ui.button("🗑️", on_click=lambda u=user: delete_user_action(u)).props(
-                                    'flat dense round icon=delete color=red')
+                                    'flat dense round')
+                                ui.button("🗑️", on_click=lambda u=user: confirm_delete(u)).props(
+                                    'flat dense round color=reд')
             except Exception as e:
                 ui.notify(f"⚠️ Грешка при зареждане на потребители: {e}", color="negative")
 
@@ -157,23 +177,23 @@ def show_dashboard():
                         ui.notify("❌ Грешка при обновяване!")
                     dialog.close()
 
-                def confirm_delete():
-                    with ui.dialog() as confirm, ui.card():
-                        ui.label("Сигурни ли сте, че искате да изтриете този потребител?").classes("text-lg")
-                        with ui.row().classes("justify-end gap-4"):
-                            ui.button("❌ Откажи", on_click=confirm.close)
-                            ui.button("🗑️ Изтрий", on_click=lambda: (
-                                delete_user_action(user), confirm.close(), dialog.close()
-                            )).classes("bg-red-500 text-white")
-
-                    confirm.open()
-
                 with ui.row().classes("gap-4 justify-between"):
                     ui.button("Запази", on_click=save).classes("bg-green-500 text-white px-4 py-1 rounded")
-                    ui.button("Изтрий", on_click=confirm_delete).classes("bg-red-500 text-white px-4 py-1 rounded")
                     ui.button("Откажи", on_click=dialog.close).classes("bg-gray-300 px-4 py-1 rounded")
 
             dialog.open()
+
+        #--- потвърждение на изтриване ---
+        def confirm_delete(user ):
+            with ui.dialog() as confirm, ui.card():
+                ui.label("Сигурни ли сте, че искате да изтриете този потребител?").classes("text-lg")
+                with ui.row().classes("justify-end gap-4"):
+                    ui.button("❌ Откажи", on_click=confirm.close)
+                    ui.button("🗑️ Изтрий", on_click=lambda: (
+                        delete_user_action(user), confirm.close()
+                    )).classes("bg-red-500 text-white")
+
+            confirm.open()
 
         # --- изтриване ---
         def delete_user_action(user):
