@@ -9,7 +9,7 @@ class User(Base):
     username = Column(String(25), unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(String, default="user")   #нова колона user / admin
+    role = Column(String, nullable=False, default="user")   #нова колона user / admin
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)

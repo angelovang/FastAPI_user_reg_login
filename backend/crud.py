@@ -24,7 +24,7 @@ def get_user_by_email(db: Session, email: str):
 def create_user(db: Session, user: schemas.UserCreate):
     db_user = models.User(username=user.username,
                           email=user.email,
-                          role=user.role or "user")
+                          role="user")
     db_user.set_password(user.password)
     db.add(db_user)
     db.commit()
@@ -41,6 +41,8 @@ def update_user(db: Session, user_id: int, user: schemas.UserBase):
     if db_user:
         db_user.username = user.username
         db_user.email = user.email
+        if user.role:  # позволява промяна на role, ако е подадено
+            db_user.role = user.role
         db.commit()
         db.refresh(db_user)
     return db_user

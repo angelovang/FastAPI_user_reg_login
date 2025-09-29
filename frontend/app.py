@@ -49,11 +49,12 @@ def get_users():
     return []
 
 
-def update_user(user_id, username, email):
+def update_user(user_id, username, email, role):
     try:
         response = requests.put(f"{API_URL}/users/{user_id}", json={
             "username": username,
-            "email": email
+            "email": email,
+            "role": role
         })
         return response.status_code == 200
     except Exception as e:
@@ -122,6 +123,7 @@ def show_login():
                         session["token_type"] = data.get("token_type", "bearer")
                         session["username"] = data["username"]
                         session["id"] = data["id"]
+                        session["role"] = data.get("role", "user")  # <--- добавено
 
                         ui.notify(f"✅ Успешно влязохте като {data['username']}!")
                         ui.navigate.to("/dashboard")
@@ -137,6 +139,8 @@ def show_login():
 def show_dashboard():
     session = ui.context.client.storage
     username = session.get("username", "гост")
+    user_id = session.get("id")
+    user_role = session.get("role", "user")
 
     with ui.card().classes("p-8 flex flex-col gap-4 shadow-xl w-full max-w-4xl"):
         ui.label(f"📋 Таблица потребители").classes("text-xl font-bold")
@@ -154,11 +158,17 @@ def show_dashboard():
                             ui.label(str(user['id'])).classes("w-8")
                             ui.label(user['username']).classes("w-48")
                             ui.label(user['email']).classes("w-64")
+                            ui.label(user['role']).classes("w-32")  # <-- ново поле
                             with ui.row().classes("gap-2"):
+                                # Бутон за смяна на парола
+                                ui.button("🔑",
+                                          on_click=lambda u=user: show_change_password(u['id'], u['username'])).props(
+                                    'flat dense round color=blue')
                                 ui.button("✏️", on_click=lambda u=user: edit_user_dialog(u)).props(
                                     'flat dense round')
                                 ui.button("🗑️", on_click=lambda u=user: confirm_delete(u)).props(
-                                    'flat dense round color=reд')
+                                    'flat dense round color=red')
+
             except Exception as e:
                 ui.notify(f"⚠️ Грешка при зареждане на потребители: {e}", color="negative")
 
@@ -168,9 +178,10 @@ def show_dashboard():
                 ui.label(f"Редакция на {user['username']}").classes("text-xl")
                 username_input = ui.input("Потребителско име", value=user['username'])
                 email_input = ui.input("Имейл", value=user['email'])
+                role_input = ui.select(["user", "admin"], value=user.get('role', 'user'), label="Роля")  # <-- ново
 
                 def save():
-                    if update_user(user['id'], username_input.value, email_input.value):
+                    if update_user(user['id'], username_input.value, email_input.value, role_input.value):
                         ui.notify("✅ Потребителят е обновен!")
                         refresh_rows()
                     else:
@@ -202,6 +213,46 @@ def show_dashboard():
                 refresh_rows()
             else:
                 ui.notify("❌ Грешка при изтриване!")
+
+        # --- смяна на парола ---
+        def show_change_password(user_id, username):
+            with ui.dialog() as dialog, ui.card():
+                ui.label(f"Смяна на парола за {username}").classes("text-xl font-bold")
+
+                old_password = ui.input("Старa парола", password=True)
+                new_password = ui.input("Нова парола", password=True)
+                confirm_password = ui.input("Повтори новата парола", password=True)
+
+                def change_password_action():
+                    if new_password.value != confirm_password.value:
+                        ui.notify("⚠️ Новата парола не съвпада с потвърждението")
+                        return
+                    if len(new_password.value.strip()) < 6:
+                        ui.notify("⚠️ Паролата трябва да е поне 6 символа")
+                        return
+                    try:
+                        response = requests.put(
+                            f"{API_URL}/users/{user_id}/change-password",
+                            json={
+                                "old_password": old_password.value,
+                                "new_password": new_password.value
+                            }
+                        )
+                        if response.status_code == 200:
+                            ui.notify("✅ Паролата е променена успешно!")
+                            dialog.close()
+                        else:
+                            detail = response.json().get("detail", "Грешка")
+                            ui.notify(f"❌ {detail}")
+                    except Exception as e:
+                        ui.notify(f"⚠️ Грешка при връзка с бекенда: {e}")
+
+                with ui.row().classes("gap-4 justify-between"):
+                    ui.button("Смени паролата", on_click=change_password_action).classes(
+                        "bg-green-500 text-white px-4 py-1 rounded")
+                    ui.button("Откажи", on_click=dialog.close).classes("bg-gray-300 px-4 py-1 rounded")
+
+            dialog.open()
 
         refresh_rows()
 

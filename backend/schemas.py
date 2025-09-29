@@ -25,3 +25,8 @@ class UserOut(UserBase):
 
     class Config:
         orm_mode = True
+
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: constr(min_length=6)

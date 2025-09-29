@@ -16,8 +16,30 @@ def get_db():
         db.close()
 
 
+# ---------------- Startup check ----------------
+@app.on_event("startup")
+def ensure_admin_exists():
+    """Ако няма администратор в базата, създава се дефолтен"""
+    db: Session = SessionLocal()
+    try:
+        admin = crud.get_user_by_username(db, "admin")
+        if not admin:
+            user_in = schemas.UserCreate(
+                username="admin",
+                email="admin@example.com",
+                password="admin123"   # ⇐ смени след първо влизане!
+            )
+            db_admin = crud.create_user(db, user_in)
+            db_admin.role = "admin"
+            db.commit()
+            print("✅ Създаден е администратор: admin / admin123")
+        else:
+            print("ℹ️ Администратор вече съществува.")
+    finally:
+        db.close()
 
 
+# ---------------- API endpoints ----------------
 @app.post("/login/")
 def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = crud.authenticate_user(db, user.username, user.password)
@@ -30,7 +52,8 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer",
         "username": db_user.username,  # <-- добавено
-        "id": db_user.id  # <-- по желание
+        "id": db_user.id, # <-- по желание
+        "role": db_user.role
     }
 
 
@@ -55,3 +78,18 @@ def update_user(user_id: int, user: schemas.UserBase, db: Session = Depends(get_
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     return crud.delete_user(db, user_id=user_id)
+
+
+@app.put("/users/{user_id}/change-password")
+def change_password(user_id: int, passwords: schemas.PasswordChange, db: Session = Depends(get_db)):
+    db_user = db.query(crud.models.User).filter(crud.models.User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Потребителят не е намерен")
+
+    if not db_user.check_password(passwords.old_password):
+        raise HTTPException(status_code=400, detail="Старият парола е грешна")
+
+    db_user.set_password(passwords.new_password)
+    db.commit()
+    db.refresh(db_user)
+    return {"msg": "Паролата е променена успешно"}
