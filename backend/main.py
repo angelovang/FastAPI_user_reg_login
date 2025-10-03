@@ -52,7 +52,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer",
         "username": db_user.username,  # <-- добавено
-        "id": db_user.id, # <-- по желание
+        "id": db_user.id,  # <-- по желание
         "role": db_user.role
     }
 

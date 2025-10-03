@@ -1,12 +1,18 @@
-from nicegui import ui
+
+from nicegui import ui, app
 import requests
 import httpx
 
 API_URL = "http://127.0.0.1:8000"
 token = None
 
-# проста глобална променлива за демо
-current_user = None
+# глобална променлива за сесията - подлежи на обсъждане за сигурността
+current_session = {}
+
+
+# -------------------- Helper функции --------------------
+def get_session():
+    return current_session
 
 
 # -------------------- Navbar --------------------
@@ -20,7 +26,37 @@ def add_header():
         )
         ui.icon("history_edu").classes("text-stone-700 text-3xl")
     # оставяме празно място под navbar, за да не се застъпва със съдържанието
-    ui.space().classes("h-20")
+    ui.space().classes("h-9")
+
+
+# ----------------- Допълнителен Navbar ---------------
+def add_subnav():
+    session = get_session()
+    username = session.get("username", "гост")
+    role = session.get("role", "user")
+
+    with ui.row().classes(
+            "w-full h-12 bg-amber-200 shadow flex items-center px-6 gap-6"
+    ):
+        ui.button("🏠 Home", on_click=lambda: ui.navigate.to("/home")).props("flat")
+
+        ui.space()  # празно място от ляво
+
+        ui.button("🪨 Пластове", on_click=lambda: ui.navigate.to("/layers")).props("flat")
+        ui.button("⚗️ Примеси", on_click=lambda: ui.navigate.to("/layer_includes")).props("flat")
+        ui.button("📐 ПОК", on_click=lambda: ui.navigate.to("/pok")).props("flat")
+        ui.button("🧩 Фрагменти", on_click=lambda: ui.navigate.to("/fragments")).props("flat")
+        ui.button("🎨 Орнаменти", on_click=lambda: ui.navigate.to("/ornaments")).props("flat")
+
+        ui.space()  # празно място от дясно
+
+        ui.label(f"🔑 Logged as: {username}").classes("text-sm italic")
+
+        # 🔹 Показваме "Edit users" само за admin
+        if role == "admin":
+            ui.button("👥 Edit users", on_click=lambda: ui.navigate.to("/dashboard")).props("flat")
+
+        ui.button("🚪 Logout", on_click=logout_action).props("flat")
 
 
 # -------------------- API функции --------------------
@@ -31,10 +67,12 @@ def register(username, email, password):
             "email": email,
             "password": password
         })
+
         if response.status_code == 200:
             ui.notify("✅ Регистрация успешна!")
         else:
             ui.notify(f"❌ Грешка: {response.json().get('detail', 'Unknown error')}")
+
     except Exception as e:
         ui.notify(f"❌ Грешка при връзка с бекенда: {e}")
 
@@ -44,9 +82,10 @@ def get_users():
         response = requests.get(f"{API_URL}/users/")
         if response.status_code == 200:
             return response.json()
+
     except Exception as e:
         ui.notify(f"❌ Грешка при зареждане на потребителите: {e}")
-    return []
+        return []
 
 
 def update_user(user_id, username, email, role):
@@ -57,6 +96,7 @@ def update_user(user_id, username, email, role):
             "role": role
         })
         return response.status_code == 200
+
     except Exception as e:
         ui.notify(f"❌ Грешка при обновяване: {e}")
         return False
@@ -66,6 +106,7 @@ def delete_user(user_id):
     try:
         response = requests.delete(f"{API_URL}/users/{user_id}")
         return response.status_code == 200
+
     except Exception as e:
         ui.notify(f"❌ Грешка при изтриване: {e}")
         return False
@@ -83,12 +124,15 @@ def show_register():
             if len(username.value.strip()) < 3:
                 ui.notify("⚠️ Потребителското име трябва да е поне 3 символа")
                 return
+
             if "@" not in email.value or "." not in email.value:
                 ui.notify("⚠️ Въведете валиден имейл")
                 return
+
             if len(password.value.strip()) < 6:
                 ui.notify("⚠️ Паролата трябва да е поне 6 символа")
                 return
+
             # ако всичко е ок → извикай backend API
             register(username.value, email.value, password.value)
 
@@ -97,6 +141,7 @@ def show_register():
 
 
 def show_login():
+    global current_session
     with ui.card().classes("p-8 flex flex-col items-center gap-4 shadow-xl"):
         ui.label("Вход").classes("text-xl font-bold")
         username = ui.input("Потребителско име")
@@ -106,9 +151,11 @@ def show_login():
             if len(username.value.strip()) < 3:
                 ui.notify("⚠️ Потребителското име трябва да е поне 3 символа")
                 return
+
             if len(password.value.strip()) < 4:
                 ui.notify("⚠️ Паролата трябва да е поне 6 символа")
                 return
+
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.post(
@@ -125,10 +172,14 @@ def show_login():
                         session["id"] = data["id"]
                         session["role"] = data.get("role", "user")  # <--- добавено
 
+                        global current_session
+                        current_session = session  # Запомняме сесията в глобална променлива !
+
                         ui.notify(f"✅ Успешно влязохте като {data['username']}!")
-                        ui.navigate.to("/dashboard")
+                        ui.navigate.to("/home")
                     else:
                         ui.notify("❌ Невалидни данни за вход!", color="negative")
+
                 except Exception as e:
                     ui.notify(f"⚠️ Грешка при връзка със сървъра: {e}", color="negative")
 
@@ -195,7 +246,7 @@ def show_dashboard():
             dialog.open()
 
         #--- потвърждение на изтриване ---
-        def confirm_delete(user ):
+        def confirm_delete(user):
             with ui.dialog() as confirm, ui.card():
                 ui.label("Сигурни ли сте, че искате да изтриете този потребител?").classes("text-lg")
                 with ui.row().classes("justify-end gap-4"):
@@ -227,9 +278,11 @@ def show_dashboard():
                     if new_password.value != confirm_password.value:
                         ui.notify("⚠️ Новата парола не съвпада с потвърждението")
                         return
+
                     if len(new_password.value.strip()) < 6:
                         ui.notify("⚠️ Паролата трябва да е поне 6 символа")
                         return
+
                     try:
                         response = requests.put(
                             f"{API_URL}/users/{user_id}/change-password",
@@ -238,12 +291,14 @@ def show_dashboard():
                                 "new_password": new_password.value
                             }
                         )
+
                         if response.status_code == 200:
                             ui.notify("✅ Паролата е променена успешно!")
                             dialog.close()
                         else:
                             detail = response.json().get("detail", "Грешка")
                             ui.notify(f"❌ {detail}")
+
                     except Exception as e:
                         ui.notify(f"⚠️ Грешка при връзка с бекенда: {e}")
 
@@ -253,8 +308,17 @@ def show_dashboard():
                     ui.button("Откажи", on_click=dialog.close).classes("bg-gray-300 px-4 py-1 rounded")
 
             dialog.open()
-
         refresh_rows()
+
+
+# -------------------- Logout --------------------
+def logout_action():
+    # session = ui.context.client.storage
+    # session.clear()
+    global current_session
+    current_session = {}
+    ui.notify("✅ Излязохте успешно")
+    ui.navigate.to("/")
 
 
 # -------------------- Страници --------------------
@@ -266,6 +330,16 @@ def main_page():
             ui.label("Добре дошли!").classes("text-3xl font-bold mb-4")
             ui.button("🔑 Вход", on_click=lambda: ui.navigate.to('/login')).classes("w-40")
             ui.button("📝 Регистрация", on_click=lambda: ui.navigate.to('/register')).classes("w-40")
+
+
+@ui.page('/home')
+def home_page():
+    session = ui.context.client.storage
+    add_header()
+    add_subnav()
+    with ui.column().classes("items-center justify-center w-full p-8"):
+        ui.label("Добре дошли в системата за археологически данни!").classes("text-2xl font-bold")
+        ui.label("Изберете модул от горното меню, за да продължите.").classes("text-lg italic text-gray-700")
 
 
 @ui.page('/register')
@@ -289,5 +363,52 @@ def dashboard_page():
         show_dashboard()
 
 
+# ------------------- Dummy старници ------------------
+@ui.page('/layers')
+def layers_page():
+    add_header()
+    add_subnav()
+    with ui.column().classes("items-center justify-center p-8"):
+        ui.label("🪨 Пластове").classes("text-2xl font-bold")
+        ui.label("Тук ще бъде модулът за управление на пластовете.").classes("text-lg italic text-gray-700")
+
+
+@ui.page('/layer_includes')
+def includes_page():
+    add_header()
+    add_subnav()
+    with ui.column().classes("items-center justify-center p-8"):
+        ui.label("⚗️ Примеси").classes("text-2xl font-bold")
+        ui.label("Тук ще бъде модулът за управление на примесите.").classes("text-lg italic text-gray-700")
+
+
+@ui.page('/pok')
+def pok_page():
+    add_header()
+    add_subnav()
+    with ui.column().classes("items-center justify-center p-8"):
+        ui.label("📐 ПОК").classes("text-2xl font-bold")
+        ui.label("Тук ще бъде модулът за ПОК (по-късно ще се уточни функционалността).").classes(
+            "text-lg italic text-gray-700")
+
+
+@ui.page('/fragments')
+def fragments_page():
+    add_header()
+    add_subnav()
+    with ui.column().classes("items-center justify-center p-8"):
+        ui.label("🧩 Фрагменти").classes("text-2xl font-bold")
+        ui.label("Тук ще бъде модулът за управление на фрагментите.").classes("text-lg italic text-gray-700")
+
+
+@ui.page('/ornaments')
+def ornaments_page():
+    add_header()
+    add_subnav()
+    with ui.column().classes("items-center justify-center p-8"):
+        ui.label("🎨 Орнаменти").classes("text-2xl font-bold")
+        ui.label("Тук ще бъде модулът за управление на орнаментите.").classes("text-lg italic text-gray-700")
+
+
 # -------------------- Стартиране --------------------
-ui.run(port=8081)
+ui.run(port=8081, storage_secret='private key')
