@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 from werkzeug.security import generate_password_hash, check_password_hash
-from .database import Base
+from backend.database import Base
 
 class User(Base):
     __tablename__ = "tblregistered"

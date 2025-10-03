@@ -4,8 +4,8 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from .database import SessionLocal
-from .crud import get_user_by_username
-from .models import User
+from .users.crud import get_user_by_username
+from .users.models import User
 
 SECRET_KEY = "supersecret"
 ALGORITHM = "HS256"
