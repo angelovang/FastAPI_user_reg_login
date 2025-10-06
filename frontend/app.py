@@ -159,7 +159,7 @@ def show_login():
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.post(
-                        "http://localhost:8000/login/",
+                        "http://localhost:8000/users/login/",
                         json={"username": username.value, "password": password.value},
                     )
                     if response.status_code == 200:
