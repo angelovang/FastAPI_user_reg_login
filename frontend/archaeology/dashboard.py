@@ -127,10 +127,44 @@ def show_layers_dashboard():
             ui.label("⚠️ Няма налични записи.").classes("text-gray-500 italic")
             return
 
+        # === Филтриране ===
+        filtered_layers = []
+        for l in layers:
+            if filter_name.value and filter_name.value.lower() not in (l.get('layername') or '').lower():
+                continue
+            if filter_type.value and l.get('layertype') != filter_type.value:
+                continue
+            if filter_color.value and l.get('color1') != filter_color.value:
+                continue
+            filtered_layers.append(l)
+
         all_fields = list(field_labels.keys())
         columns = [{"name": key, "label": field_labels[key], "field": key, "sortable": True} for key in all_fields]
         columns.append({"name": "actions", "label": "Действия", "field": "actions"})
 
+        rows = []
+        for l in filtered_layers:
+            row = {key: (l.get(key) if l.get(key) is not None else "-") for key in all_fields}
+            row["actions"] = l
+            rows.append(row)
+
+        with table_container:
+            table = ui.table(columns=columns, rows=rows, row_key="layerid", pagination=10)
+            table.classes("w-full text-sm")
+            table.add_slot("body-cell-actions", '''
+                   <q-td :props="props">
+                       <q-btn size="sm" color="primary" flat icon="edit" @click="() => $parent.$emit('edit', props.row.actions)" />
+                       <q-btn size="sm" color="negative" flat icon="delete" @click="() => $parent.$emit('delete', props.row.actions)" />
+                   </q-td>
+               ''')
+            table.on("edit", lambda e: open_edit_dialog(e.args))
+            ui.on("delete", lambda e: confirm_delete(e.args))
+
+        all_fields = list(field_labels.keys())
+        columns = [{"name": key, "label": field_labels[key], "field": key, "sortable": True} for key in all_fields]
+        columns.append({"name": "actions", "label": "Действия", "field": "actions"})
+
+        '''
         rows = []
         for l in layers:
             row = {key: (l.get(key) if l.get(key) is not None else "-") for key in all_fields}
@@ -140,14 +174,15 @@ def show_layers_dashboard():
         with table_container:
             table = ui.table(columns=columns, rows=rows, row_key="layerid", pagination=10)
             table.classes("w-full text-sm")
-            table.add_slot("body-cell-actions", '''
+            table.add_slot("body-cell-actions", """
                 <q-td :props="props">
                     <q-btn size="sm" color="primary" flat icon="edit" @click="() => $parent.$emit('edit', props.row.actions)" />
                     <q-btn size="sm" color="negative" flat icon="delete" @click="() => $parent.$emit('delete', props.row.actions)" />
                 </q-td>
-            ''')
+            """)
             table.on("edit", lambda e: open_edit_dialog(e.args))
             table.on("delete", lambda e: confirm_delete(e.args))
+        '''
 
     # === ✏️ Форма за редакция ===
     def open_edit_dialog(layer):
@@ -250,6 +285,21 @@ def show_layers_dashboard():
     with ui.row().classes("justify-between w-full py-4"):
         ui.label("🪨 Управление на пластове").classes("text-xl font-bold")
         ui.button("➕ Нов пласт", on_click=open_create_dialog).classes("bg-blue-500 text-white")
+
+
+    # === 🔍 Панел за филтри и търсене ===
+    filter_name = ui.input('Търси по име на пласт...').props('clearable').classes('w-1/4')
+    filter_type = ui.select(['', 'механичен', 'контекст'], label='Тип пласт').classes('w-1/6')
+    filter_color = ui.select([
+        '', 'бял', 'жълт', 'охра', 'червен', 'сив',
+        'тъмносив', 'кафяв', 'светлокафяв', 'тъмнокафяв', 'черен'
+    ], label='Основен цвят').classes('w-1/6')
+
+    with ui.row().classes('items-center justify-start gap-4 w-full pb-4'):
+        filter_name
+        filter_type
+        filter_color
+        ui.button('🔄 Обнови', on_click=lambda: refresh_table()).classes('bg-blue-500 text-white')
 
     # === Начално зареждане ===
     refresh_table()
