@@ -1,3 +1,4 @@
+
 from nicegui import ui, app
 import requests
 import httpx
@@ -158,7 +159,7 @@ def show_login():
             async with httpx.AsyncClient() as client:
                 try:
                     response = await client.post(
-                        "http://localhost:8000/login/",
+                        "http://localhost:8000/users/login/",
                         json={"username": username.value, "password": password.value},
                     )
                     if response.status_code == 200:
@@ -244,7 +245,7 @@ def show_dashboard():
 
             dialog.open()
 
-        # --- потвърждение на изтриване ---
+        #--- потвърждение на изтриване ---
         def confirm_delete(user):
             with ui.dialog() as confirm, ui.card():
                 ui.label("Сигурни ли сте, че искате да изтриете този потребител?").classes("text-lg")
@@ -307,7 +308,6 @@ def show_dashboard():
                     ui.button("Откажи", on_click=dialog.close).classes("bg-gray-300 px-4 py-1 rounded")
 
             dialog.open()
-
         refresh_rows()
 
 
