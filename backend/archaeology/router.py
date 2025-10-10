@@ -10,6 +10,7 @@ router = APIRouter(
     tags=["archaeology"]
 )
 
+# ---------- Layers -------------
 # -----------------------
 # CREATE
 # -----------------------
@@ -53,3 +54,41 @@ def delete_layer(layerid: int, db: Session = Depends(get_db)):
     if not db_layer:
         raise HTTPException(status_code=404, detail="Layer not found")
     return db_layer
+
+
+# ----------- Includes ----------------
+# -----------------------
+# TBL LAYER INCLUDES
+# -----------------------
+@router.post("/layer_includes/", response_model=schemas.Tbllayerinclude)
+def create_include(include: schemas.TbllayerincludeCreate, db: Session = Depends(get_db)):
+    return crud.create_layer_include(db, include)
+
+
+@router.get("/layer_includes/", response_model=List[schemas.Tbllayerinclude])
+def read_includes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_layer_includes(db, skip=skip, limit=limit)
+
+
+@router.get("/layer_includes/{includeid}", response_model=schemas.Tbllayerinclude)
+def read_include(includeid: int, db: Session = Depends(get_db)):
+    db_include = crud.get_layer_include(db, includeid)
+    if not db_include:
+        raise HTTPException(status_code=404, detail="Include not found")
+    return db_include
+
+
+@router.put("/layer_includes/{includeid}", response_model=schemas.Tbllayerinclude)
+def update_include(includeid: int, include: schemas.TbllayerincludeUpdate, db: Session = Depends(get_db)):
+    db_include = crud.update_layer_include(db, includeid, include)
+    if not db_include:
+        raise HTTPException(status_code=404, detail="Include not found")
+    return db_include
+
+
+@router.delete("/layer_includes/{includeid}", response_model=schemas.Tbllayerinclude)
+def delete_include(includeid: int, db: Session = Depends(get_db)):
+    db_include = crud.delete_layer_include(db, includeid)
+    if not db_include:
+        raise HTTPException(status_code=404, detail="Include not found")
+    return db_include

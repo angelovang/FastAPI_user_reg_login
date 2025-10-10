@@ -3,6 +3,7 @@ from datetime import date
 from typing import Optional, Literal
 
 
+# ----------- Layers ----------------
 class TbllayerBase(BaseModel):
     # Enums чрез Literal
     layertype: Optional[Literal['механичен', 'контекст']] = None
@@ -40,6 +41,31 @@ class TbllayerUpdate(TbllayerBase):
 
 class Tbllayer(TbllayerBase):
     layerid: int
+
+    class Config:
+        orm_mode = True
+
+
+# ----------- Includes ---------------
+class TbllayerincludeBase(BaseModel):
+    locationid: Optional[int] = None
+    includetype: Optional[Literal["антропогенен", "естествен"]] = None
+    includetext: Optional[str] = None
+    includesize: Optional[Literal["малки", "средни", "големи"]] = None
+    includeconc: Optional[Literal["ниска", "средна", "висока"]] = None
+    recordenteredon: Optional[date] = None
+
+
+class TbllayerincludeCreate(TbllayerincludeBase):
+    pass
+
+
+class TbllayerincludeUpdate(TbllayerincludeBase):
+    pass
+
+
+class Tbllayerinclude(TbllayerincludeBase):
+    includeid: int
 
     class Config:
         orm_mode = True

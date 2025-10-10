@@ -20,6 +20,7 @@ def sync_request(method: str, endpoint: str, json: dict = None):
     url = f"{API_URL}{endpoint}"
     try:
         response = requests.request(method, url, json=json)
+        print(response)
         return response
     except Exception as e:
         ui.notify(f"⚠️ Грешка при връзка с бекенда: {e}", color="negative")

@@ -1,4 +1,4 @@
-# frontend/users/dashboard.py
+# frontend/users/dashboard_layers.py
 
 from nicegui import ui
 import requests

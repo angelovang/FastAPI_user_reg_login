@@ -164,26 +164,6 @@ def show_layers_dashboard():
         columns = [{"name": key, "label": field_labels[key], "field": key, "sortable": True} for key in all_fields]
         columns.append({"name": "actions", "label": "Действия", "field": "actions"})
 
-        '''
-        rows = []
-        for l in layers:
-            row = {key: (l.get(key) if l.get(key) is not None else "-") for key in all_fields}
-            row["actions"] = l
-            rows.append(row)
-
-        with table_container:
-            table = ui.table(columns=columns, rows=rows, row_key="layerid", pagination=10)
-            table.classes("w-full text-sm")
-            table.add_slot("body-cell-actions", """
-                <q-td :props="props">
-                    <q-btn size="sm" color="primary" flat icon="edit" @click="() => $parent.$emit('edit', props.row.actions)" />
-                    <q-btn size="sm" color="negative" flat icon="delete" @click="() => $parent.$emit('delete', props.row.actions)" />
-                </q-td>
-            """)
-            table.on("edit", lambda e: open_edit_dialog(e.args))
-            table.on("delete", lambda e: confirm_delete(e.args))
-        '''
-
     # === ✏️ Форма за редакция ===
     def open_edit_dialog(layer):
         with ui.dialog() as dialog, ui.card().classes("w-full max-w-5xl p-6"):
