@@ -1,5 +1,4 @@
 from nicegui import ui
-from datetime import datetime
 from frontend.archaeology.api import get_layers, create_layer, update_layer, delete_layer
 
 

@@ -5,6 +5,7 @@ from typing import List
 from backend.database import get_db
 from . import crud, schemas
 
+
 router = APIRouter(
     prefix="/archaeology",
     tags=["archaeology"]
@@ -92,3 +93,44 @@ def delete_include(includeid: int, db: Session = Depends(get_db)):
     if not db_include:
         raise HTTPException(status_code=404, detail="Include not found")
     return db_include
+
+
+# ------------- Fragments -----------------
+
+# CREATE
+@router.post("/fragments/", response_model=schemas.Tblfragment)
+def create_fragment(fragment: schemas.TblfragmentCreate, db: Session = Depends(get_db)):
+    return crud.create_fragment(db, fragment)
+
+
+# READ ALL
+@router.get("/fragments/", response_model=List[schemas.Tblfragment])
+def read_fragments(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_fragments(db, skip=skip, limit=limit)
+
+
+# READ BY ID
+@router.get("/fragments/{fragmentid}", response_model=schemas.Tblfragment)
+def read_fragment(fragmentid: int, db: Session = Depends(get_db)):
+    db_fr = crud.get_fragment(db, fragmentid)
+    if not db_fr:
+        raise HTTPException(status_code=404, detail="Fragment not found")
+    return db_fr
+
+
+# UPDATE
+@router.put("/fragments/{fragmentid}", response_model=schemas.Tblfragment)
+def update_fragment(fragmentid: int, fragment: schemas.TblfragmentUpdate, db: Session = Depends(get_db)):
+    db_fr = crud.update_fragment(db, fragmentid, fragment)
+    if not db_fr:
+        raise HTTPException(status_code=404, detail="Fragment not found")
+    return db_fr
+
+
+# DELETE
+@router.delete("/fragments/{fragmentid}", response_model=schemas.Tblfragment)
+def delete_fragment(fragmentid: int, db: Session = Depends(get_db)):
+    db_fr = crud.delete_fragment(db, fragmentid)
+    if not db_fr:
+        raise HTTPException(status_code=404, detail="Fragment not found")
+    return db_fr

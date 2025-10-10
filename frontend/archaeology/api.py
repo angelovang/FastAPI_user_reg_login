@@ -1,7 +1,5 @@
 # frontend/archaeology/api.py
 import requests
-from frontend.common.api import sync_request
-from frontend.common.api import sync_request
 
 
 API_URL = "http://127.0.0.1:8000/archaeology"
@@ -77,3 +75,42 @@ def delete_layer_include(includeid):
         print(f"Грешка при изтриване на примес: {e}")
         return None
 
+
+# -------------- Fragments ---------------
+
+def get_fragments():
+    """Взема всички фрагменти от бекенда"""
+    try:
+        response = requests.get(f"{API_URL}/fragments/")
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        print(f"❌ Грешка при зареждане на фрагменти: {e}")
+    return []
+
+def create_fragment(data):
+    """Създава нов фрагмент"""
+    try:
+        response = requests.post(f"{API_URL}/fragments/", json=data)
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при създаване на фрагмент: {e}")
+        return None
+
+def update_fragment(fragmentid, data):
+    """Обновява фрагмент по ID"""
+    try:
+        response = requests.put(f"{API_URL}/fragments/{fragmentid}", json=data)
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при обновяване на фрагмент: {e}")
+        return None
+
+def delete_fragment(fragmentid):
+    """Изтрива фрагмент по ID"""
+    try:
+        response = requests.delete(f"{API_URL}/fragments/{fragmentid}")
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при изтриване на фрагмент: {e}")
+        return None

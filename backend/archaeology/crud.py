@@ -3,6 +3,7 @@ from . import models, schemas
 
 
 # ------------ Layers CRUD --------------
+
 # CREATE
 def create_layer(db: Session, layer: schemas.TbllayerCreate):
     db_layer = models.Tbllayer(**layer.dict())
@@ -45,6 +46,7 @@ def delete_layer(db: Session, layerid: int):
 
 
 # -------------------- INCLUDES CRUD --------------------
+
 def create_layer_include(db: Session, include: schemas.TbllayerincludeCreate):
     db_include = models.Tbllayerinclude(**include.dict())
     db.add(db_include)
@@ -79,3 +81,41 @@ def delete_layer_include(db: Session, includeid: int):
     db.delete(db_include)
     db.commit()
     return db_include
+
+
+# ------------- Fragments CRUD -------------
+
+def create_fragment(db: Session, fragment: schemas.TblfragmentCreate):
+    db_fragment = models.Tblfragment(**fragment.dict())
+    db.add(db_fragment)
+    db.commit()
+    db.refresh(db_fragment)
+    return db_fragment
+
+
+def get_fragments(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Tblfragment).offset(skip).limit(limit).all()
+
+
+def get_fragment(db: Session, fragmentid: int):
+    return db.query(models.Tblfragment).filter(models.Tblfragment.fragmentid == fragmentid).first()
+
+
+def update_fragment(db: Session, fragmentid: int, fragment: schemas.TblfragmentUpdate):
+    db_fr = db.query(models.Tblfragment).filter(models.Tblfragment.fragmentid == fragmentid).first()
+    if not db_fr:
+        return None
+    for k, v in fragment.dict(exclude_unset=True).items():
+        setattr(db_fr, k, v)
+    db.commit()
+    db.refresh(db_fr)
+    return db_fr
+
+
+def delete_fragment(db: Session, fragmentid: int):
+    db_fr = db.query(models.Tblfragment).filter(models.Tblfragment.fragmentid == fragmentid).first()
+    if not db_fr:
+        return None
+    db.delete(db_fr)
+    db.commit()
+    return db_fr
