@@ -3,7 +3,8 @@ from frontend.common.layout import add_header, add_subnav
 from frontend.archaeology.dashboard_layers import show_layers_dashboard
 from frontend.archaeology.dashboard_includes import show_layer_includes_dashboard
 from frontend.archaeology.dashboard_fragments import show_fragments_dashboard
-
+from frontend.archaeology.dashboard_pok import show_pok_dashboard
+from frontend.archaeology.dashboard_ornaments import show_ornaments_dashboard
 
 # """Страница за управление на археологическите пластове"""
 @ui.page('/layers')
@@ -31,22 +32,20 @@ def fragments_page():
     with ui.row().classes("items-center justify-center w-full p-4"):
         show_fragments_dashboard()
 
-# 🧱 Dummy страници за останалите подмодули (остават временно)
 
+# Страница за управление на ПОК
 @ui.page('/pok')
 def pok_page():
     add_header()
     add_subnav()
-    with ui.column().classes("items-center justify-center p-8"):
-        ui.label("📐 ПОК").classes("text-2xl font-bold")
-        ui.label("Тук ще бъде модулът за ПОК (по-късно ще се уточни функционалността).").classes(
-            "text-lg italic text-gray-700")
+    with ui.row().classes("items-center justify-center w-full p-4"):
+        show_pok_dashboard()
 
 
+# Страница за управление на орнаменти
 @ui.page('/ornaments')
 def ornaments_page():
     add_header()
     add_subnav()
-    with ui.column().classes("items-center justify-center p-8"):
-        ui.label("🎨 Орнаменти").classes("text-2xl font-bold")
-        ui.label("Тук ще бъде модулът за управление на орнаментите.").classes("text-lg italic text-gray-700")
+    with ui.row().classes("items-center justify-center w-full p-4"):
+        show_ornaments_dashboard()

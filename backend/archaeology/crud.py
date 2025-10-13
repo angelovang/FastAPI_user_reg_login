@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from datetime import date
 
 
 # ------------ Layers CRUD --------------
@@ -119,3 +120,91 @@ def delete_fragment(db: Session, fragmentid: int):
     db.delete(db_fr)
     db.commit()
     return db_fr
+
+
+# -------------- POK CRUD ---------------
+
+# 🟢 Създаване на нов запис
+def create_pok(db: Session, pok: schemas.PokCreate):
+    new_pok = models.Tblpok(
+        locationid=pok.locationid,
+        type=pok.type,
+        quantity=pok.quantity,
+        weight=pok.weight,
+        sok_weight=pok.sok_weight,
+        recordenteredon=pok.recordenteredon or date.today(),
+    )
+    db.add(new_pok)
+    db.commit()
+    db.refresh(new_pok)
+    return new_pok
+
+
+# 🟢 Взимане на всички записи
+def get_poks(db: Session):
+    return db.query(models.Tblpok).all()
+
+
+# 🟢 Взимане на един запис по ID
+def get_pok_by_id(db: Session, pokid: int):
+    return db.query(models.Tblpok).filter(models.Tblpok.pokid == pokid).first()
+
+
+# 🟡 Обновяване на съществуващ запис
+def update_pok(db: Session, pokid: int, pok_data: schemas.PokUpdate):
+    pok = db.query(models.Tblpok).filter(models.Tblpok.pokid == pokid).first()
+    if not pok:
+        return None
+
+    for key, value in pok_data.dict(exclude_unset=True).items():
+        setattr(pok, key, value)
+
+    db.commit()
+    db.refresh(pok)
+    return pok
+
+
+# 🔴 Изтриване
+def delete_pok(db: Session, pokid: int):
+    pok = db.query(models.Tblpok).filter(models.Tblpok.pokid == pokid).first()
+    if not pok:
+        return None
+
+    db.delete(pok)
+    db.commit()
+    return True
+
+
+# ---- ORNAMENTS ----
+
+def get_all_ornaments(db: Session):
+    return db.query(models.Tblornament).all()
+
+def get_ornament(db: Session, ornamentid: int):
+    return db.query(models.Tblornament).filter(models.Tblornament.ornamentid == ornamentid).first()
+
+def create_ornament(db: Session, ornament: schemas.OrnamentCreate):
+    db_ornament = models.Tblornament(**ornament.dict())
+    db.add(db_ornament)
+    db.commit()
+    db.refresh(db_ornament)
+    return db_ornament
+
+
+def update_ornament(db: Session, ornamentid: int, ornament: schemas.OrnamentUpdate):
+    db_ornament = db.query(models.Tblornament).filter(models.Tblornament.ornamentid == ornamentid).first()
+    if not db_ornament:
+        return None
+    for key, value in ornament.dict(exclude_unset=True).items():
+        setattr(db_ornament, key, value)
+    db.commit()
+    db.refresh(db_ornament)
+    return db_ornament
+
+def delete_ornament(db: Session, ornamentid: int):
+    db_ornament = db.query(models.Tblornament).filter(models.Tblornament.ornamentid == ornamentid).first()
+    if not db_ornament:
+        return None
+    db.delete(db_ornament)
+    db.commit()
+    return db_ornament

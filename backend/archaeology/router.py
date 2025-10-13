@@ -134,3 +134,81 @@ def delete_fragment(fragmentid: int, db: Session = Depends(get_db)):
     if not db_fr:
         raise HTTPException(status_code=404, detail="Fragment not found")
     return db_fr
+
+
+# --------------- POK -----------------
+
+# 🟢 Всички записи
+@router.get("/pok", response_model=list[schemas.PokOut])
+def get_poks(db: Session = Depends(get_db)):
+    return crud.get_poks(db)
+
+
+# 🟢 Един запис по ID
+@router.get("/pok/{pokid}", response_model=schemas.PokOut)
+def get_pok(pokid: int, db: Session = Depends(get_db)):
+    pok = crud.get_pok_by_id(db, pokid)
+    if not pok:
+        raise HTTPException(status_code=404, detail="POK not found")
+    return pok
+
+
+# 🟢 Създаване
+@router.post("/pok", response_model=schemas.PokOut)
+def create_pok(pok: schemas.PokCreate, db: Session = Depends(get_db)):
+    return crud.create_pok(db, pok)
+
+
+# 🟡 Обновяване
+@router.put("/pok/{pokid}", response_model=schemas.PokOut)
+def update_pok(pokid: int, pok_data: schemas.PokUpdate, db: Session = Depends(get_db)):
+    pok = crud.update_pok(db, pokid, pok_data)
+    if not pok:
+        raise HTTPException(status_code=404, detail="POK not found")
+    return pok
+
+
+# 🔴 Изтриване
+@router.delete("/pok/{pokid}")
+def delete_pok(pokid: int, db: Session = Depends(get_db)):
+    success = crud.delete_pok(db, pokid)
+    if not success:
+        raise HTTPException(status_code=404, detail="POK not found")
+    return {"detail": "POK deleted successfully"}
+
+
+# --------------- Ornaments ---------------
+
+# Списък с всички орнаменти
+@router.get("/ornaments/", response_model=list[schemas.OrnamentOut])
+def read_ornaments(db: Session = Depends(get_db)):
+    return crud.get_all_ornaments(db)
+
+# Създаване на орнамент
+@router.post("/ornaments/", response_model=schemas.OrnamentOut)
+def create_ornament(ornament: schemas.OrnamentCreate, db: Session = Depends(get_db)):
+    return crud.create_ornament(db, ornament)
+
+# Единичен запис по ID
+@router.get("/ornaments/{ornamentid}", response_model=schemas.OrnamentOut)
+def read_ornament(ornamentid: int, db: Session = Depends(get_db)):
+    db_ornament = crud.get_ornament(db, ornamentid)
+    if not db_ornament:
+        raise HTTPException(status_code=404, detail="Ornament not found")
+    return db_ornament
+
+# Обновяване
+@router.put("/ornaments/{ornamentid}", response_model=schemas.OrnamentOut)
+def update_ornament(ornamentid: int, ornament: schemas.OrnamentUpdate, db: Session = Depends(get_db)):
+    db_ornament = crud.update_ornament(db, ornamentid, ornament)
+    if not db_ornament:
+        raise HTTPException(status_code=404, detail="Ornament not found")
+    return db_ornament
+
+# Изтриване
+@router.delete("/ornaments/{ornamentid}")
+def delete_ornament(ornamentid: int, db: Session = Depends(get_db)):
+    db_ornament = crud.delete_ornament(db, ornamentid)
+    if not db_ornament:
+        raise HTTPException(status_code=404, detail="Ornament not found")
+    return {"detail": "Deleted successfully"}

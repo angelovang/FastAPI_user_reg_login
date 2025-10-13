@@ -114,3 +114,78 @@ def delete_fragment(fragmentid):
     except Exception as e:
         print(f"❌ Грешка при изтриване на фрагмент: {e}")
         return None
+
+
+# -------------- POK ---------------
+
+def get_pok():
+    try:
+        response = requests.get(f"{API_URL}/pok")
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        print(f"❌ Грешка при зареждане на POK: {e}")
+    return []
+
+
+def create_pok(data):
+    try:
+        response = requests.post(f"{API_URL}/pok", json=data)
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при създаване на POK: {e}")
+        return None
+
+
+def update_pok(pokid, data):
+    try:
+        response = requests.put(f"{API_URL}/pok/{pokid}", json=data)
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при обновяване на POK: {e}")
+        return None
+
+
+def delete_pok(pokid):
+    try:
+        response = requests.delete(f"{API_URL}/pok/{pokid}")
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при изтриване на POK: {e}")
+        return None
+
+
+# -------------- Ornaments ---------------
+
+def get_ornaments():
+    try:
+        response = requests.get(f"{API_URL}/ornaments/")
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        print(f"❌ Грешка при зареждане на орнаменти: {e}")
+    return []
+
+def create_ornament(data):
+    try:
+        response = requests.post(f"{API_URL}/ornaments/", json=data)
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при създаване на орнамент: {e}")
+        return None
+
+def update_ornament(ornamentid, data):
+    try:
+        response = requests.put(f"{API_URL}/ornaments/{ornamentid}", json=data)
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при обновяване на орнамент: {e}")
+        return None
+
+def delete_ornament(ornamentid):
+    try:
+        response = requests.delete(f"{API_URL}/ornaments/{ornamentid}")
+        return response
+    except Exception as e:
+        print(f"❌ Грешка при изтриване на орнамент: {e}")
+        return None

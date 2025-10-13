@@ -1,9 +1,9 @@
 
-from sqlalchemy import Column, Integer, String, Text, LargeBinary, Date, CheckConstraint, ForeignKey
+from sqlalchemy import Column, Integer, String, Text,Numeric, LargeBinary, Date, CheckConstraint, ForeignKey
 from sqlalchemy.orm import validates
 from backend.database import Base
 from sqlalchemy.sql import text
-
+from datetime import date
 
 
 # ----------- Layers -------------
@@ -231,3 +231,102 @@ class Tblfragment(Base):
             "recordenteredby": self.recordenteredby,
             "recordenteredon": self.recordenteredon,
         }
+
+
+# --------------- POK -----------------
+
+class Tblpok(Base):
+    __tablename__ = 'tblpok'
+
+    pokid = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    locationid = Column(Integer, ForeignKey('tbllayers.layerid'), nullable=True)
+
+    # типът на ПОК може да бъде свободен текст (ако имаме предварително дефинирани стойности, ще добавим CheckConstraint)
+    type = Column(Text, nullable=True)
+
+    quantity = Column(Integer, nullable=True)
+    weight = Column(Numeric(6, 3), nullable=True)
+    sok_weight = Column(Numeric(6, 3), nullable=True)
+
+    recordenteredon = Column(Date, nullable=False, default=date.today)
+
+    # ---- VALIDATORS ----
+    @validates('type', 'quantity', 'weight', 'sok_weight')
+    def empty_string_to_null(self, key, value):
+        if isinstance(value, str) and value.strip() == '':
+            return None
+        return value
+
+    def __repr__(self):
+        return f"<Tblpok id={self.pokid} location={self.locationid}>"
+
+    def serialize(self):
+        return {
+            "pokid": self.pokid,
+            "locationid": self.locationid,
+            "type": self.type,
+            "quantity": self.quantity,
+            "weight": self.weight,
+            "sok_weight": self.sok_weight,
+            "recordenteredon": self.recordenteredon,
+        }
+
+
+# ---------------- Ornaments ----------------
+
+class Tblornament(Base):
+    __tablename__ = 'tblornaments'
+
+    ornamentid = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    fragmentid = Column(Integer, ForeignKey('tblfragments.fragmentid'))
+    location = Column(Text, nullable=True)
+    relationship = Column(Text, nullable=True)
+    onornament = Column(Integer, nullable=True)
+
+    encrustcolor1 = Column(String(10), nullable=True)
+    encrustcolor2 = Column(String(10), nullable=True)
+
+    # Enum-полета чрез CheckConstraint (SQLite няма native ENUM)
+    primary_ = Column(
+        String(2),
+        CheckConstraint("primary_ IN ('А', 'В', 'Д', 'И', 'К', 'Н', 'П', 'Р', 'Ф', 'Ц', 'Щ')"),
+        nullable=True
+    )
+    secondary = Column(
+        String(5),
+        CheckConstraint("secondary IN ('I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII')"),
+        nullable=True
+    )
+    tertiary = Column(
+        String(3),
+        CheckConstraint("tertiary IN ('А','Б','В','Г','Д','Е','Ж','З','И','К','Л','М','П','А1','А2','Б1','Б2')"),
+        nullable=True
+    )
+
+    quarternary = Column(Integer, nullable=True)
+    recordenteredon = Column(Date, nullable=False)
+
+    @validates('location', 'relationship', 'encrustcolor1', 'encrustcolor2')
+    def empty_string_to_null(self, key, value):
+        if isinstance(value, str) and value.strip() == '':
+            return None
+        return value
+
+    def serialize(self):
+        return {
+            'ornamentid': self.ornamentid,
+            'fragmentid': self.fragmentid,
+            'location': self.location,
+            'relationship': self.relationship,
+            'onornament': self.onornament,
+            'encrustcolor1': self.encrustcolor1,
+            'encrustcolor2': self.encrustcolor2,
+            'primary_': self.primary_,
+            'secondary': self.secondary,
+            'tertiary': self.tertiary,
+            'quarternary': self.quarternary,
+            'recordenteredon': self.recordenteredon
+        }
+
+    def __repr__(self):
+        return f"<Tblornament id={self.ornamentid}>"

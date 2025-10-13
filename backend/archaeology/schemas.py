@@ -133,3 +133,57 @@ class Tblfragment(TblfragmentBase):
 
     class Config:
         orm_mode = True
+
+
+# ---------------- POK --------------
+
+class PokBase(BaseModel):
+    locationid: Optional[int] = None
+    type: Optional[str] = None
+    quantity: Optional[int] = None
+    weight: Optional[float] = None
+    sok_weight: Optional[float] = None
+    recordenteredon: Optional[date] = None
+
+
+class PokCreate(PokBase):
+    recordenteredon: Optional[date] = date.today()
+
+
+class PokUpdate(PokBase):
+    pass
+
+
+class PokOut(PokBase):
+    pokid: int
+
+    class Config:
+        orm_mode = True
+
+
+# -------------- Ornaments ---------------
+
+class OrnamentBase(BaseModel):
+    fragmentid: Optional[int]
+    location: Optional[str]
+    relationship: Optional[str]
+    onornament: Optional[int]
+    encrustcolor1: Optional[str]
+    encrustcolor2: Optional[str]
+    primary_: Optional[str]
+    secondary: Optional[str]
+    tertiary: Optional[str]
+    quarternary: Optional[int]
+    recordenteredon: Optional[date]
+
+class OrnamentCreate(OrnamentBase):
+    pass
+
+class OrnamentUpdate(OrnamentBase):
+    pass
+
+class OrnamentOut(OrnamentBase):
+    ornamentid: int
+
+    class Config:
+        orm_mode = True
