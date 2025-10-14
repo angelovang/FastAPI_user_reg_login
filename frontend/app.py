@@ -1,7 +1,7 @@
 from nicegui import ui
 from frontend.common.layout import add_header, add_subnav
 from frontend.users.pages import register_page, login_page  # регистрират страниците
-from frontend.archaeology.pages import *  # dummy archaeology страници
+from frontend.archaeology.pages import *
 from frontend.users.dashboard import show_dashboard
 
 
@@ -25,4 +25,4 @@ def home_page():
         ui.label("Изберете модул от горното меню, за да продължите.").classes("text-lg italic text-gray-700")
 
 
-ui.run(port=8081, storage_secret='private key')
+ui.run(port=8081, storage_secret='private key', title='ADES')

@@ -28,11 +28,11 @@ def add_subnav():
 
         ui.space()  # празно място от ляво
 
-        ui.button("🪨 Пластове", on_click=lambda: ui.navigate.to("/layers")).props("flat")
-        ui.button("⚗️ Примеси", on_click=lambda: ui.navigate.to("/layer_includes")).props("flat")
+        ui.button("⛏️ Пластове", on_click=lambda: ui.navigate.to("/layers")).props("flat")
+        ui.button("⛰️ Примеси", on_click=lambda: ui.navigate.to("/layer_includes")).props("flat")
         ui.button("📐 ПОК", on_click=lambda: ui.navigate.to("/pok")).props("flat")
         ui.button("🧩 Фрагменти", on_click=lambda: ui.navigate.to("/fragments")).props("flat")
-        ui.button("🎨 Орнаменти", on_click=lambda: ui.navigate.to("/ornaments")).props("flat")
+        ui.button("🌈 Орнаменти", on_click=lambda: ui.navigate.to("/ornaments")).props("flat")
 
         ui.space()  # празно място от дясно
 

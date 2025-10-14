@@ -260,25 +260,53 @@ def show_layers_dashboard():
                 ui.button("🗑️ Изтрий", on_click=do_delete).classes("bg-red-500 text-white")
         confirm.open()
 
-    # === Заглавие и бутон ===
-    with ui.row().classes("justify-between w-full py-4"):
-        ui.label("🪨 Управление на пластове").classes("text-xl font-bold")
-        ui.button("➕ Нов пласт", on_click=open_create_dialog).classes("bg-blue-500 text-white")
+    # === Заглавие, бутони и филтри — вертикално вляво, таблица вдясно ===
+    with ui.row().classes("w-full items-start no-wrap"):
+        # 🧭 Ляв панел — 10%
+        with ui.column().classes(
+                "w-[10%] min-w-[220px] gap-4 p-3 bg-gray-50 rounded-xl shadow-md sticky top-4 h-[90vh] overflow-auto"
+        ):
+            ui.label("⛏️ Управление на пластове").classes("text-lg font-bold mb-2")
 
+            ui.button("➕ Нов пласт", on_click=open_create_dialog).classes(
+                "bg-blue-500 text-white w-full"
+            )
 
-    # === 🔍 Панел за филтри и търсене ===
-    filter_name = ui.input('Търси по име на пласт...').props('clearable').classes('w-1/4')
-    filter_type = ui.select(['', 'механичен', 'контекст'], label='Тип пласт').classes('w-1/6')
-    filter_color = ui.select([
-        '', 'бял', 'жълт', 'охра', 'червен', 'сив',
-        'тъмносив', 'кафяв', 'светлокафяв', 'тъмнокафяв', 'черен'
-    ], label='Основен цвят').classes('w-1/6')
+            ui.separator().classes("my-2")
 
-    with ui.row().classes('items-center justify-start gap-4 w-full pb-4'):
-        filter_name
-        filter_type
-        filter_color
-        ui.button('🔄 Обнови', on_click=lambda: refresh_table()).classes('bg-blue-500 text-white')
+            ui.label("🔍 Филтриране").classes("text-md font-semibold mb-2")
+
+            filter_name = ui.input("Търси по име на пласт...").props("clearable").classes("w-full")
+            filter_type = ui.select(
+                ["", "механичен", "контекст"], label="Тип пласт"
+            ).classes("w-full")
+            filter_color = ui.select(
+                ["", "бял", "жълт", "охра", "червен", "сив", "тъмносив",
+                    "кафяв", "светлокафяв", "тъмнокафяв", "черен"],
+                label="Основен цвят",
+            ).classes("w-full")
+
+            ui.separator().classes("my-2")
+
+            # ---Бутони под филтрите---
+            ui.button("🎯 Приложи филтри", on_click=lambda: refresh_table()).classes(
+                "bg-green-600 text-white w-full"
+            )
+
+            with ui.row().classes("justify-between w-full"):
+                def reset_filters():
+                    filter_name.value = ''
+                    filter_type.value = ''
+                    filter_color.value = ''
+                    refresh_table()
+
+                ui.button("♻️ Нулирай", on_click=reset_filters).classes(
+                    "bg-gray-400 text-white w-full"
+                )
+
+        # 📋 Таблица вдясно — 90%
+        with ui.column().classes("w-[90%] p-4 overflow-auto"):
+            table_container = ui.column().classes("w-full")
 
     # === Начално зареждане ===
     refresh_table()
