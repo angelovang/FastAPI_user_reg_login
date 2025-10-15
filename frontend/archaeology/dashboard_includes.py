@@ -7,10 +7,11 @@ from frontend.archaeology.api import (
     delete_layer_include
 )
 
+
 def show_layer_includes_dashboard():
     """Главен панел за управление на tbllayerincludes"""
 
-    # --- Полета и преводи ---
+    # === Конфигурация на полета ===
     field_labels = {
         "includeid": "ID",
         "locationid": "Локация ID",
@@ -18,7 +19,7 @@ def show_layer_includes_dashboard():
         "includetext": "Описание",
         "includesize": "Размер",
         "includeconc": "Концентрация",
-        "recordenteredon": "Въведен на"
+        "recordenteredon": "Въведен на",
     }
 
     enum_includetype = ["антропогенен", "естествен"]
@@ -27,7 +28,7 @@ def show_layer_includes_dashboard():
 
     table_container = ui.column().classes("w-full")
 
-    # === 🟢 Създаване ===
+    # === 🟢 Форма за създаване ===
     def open_create_dialog():
         with ui.dialog() as dialog, ui.card().classes("w-full max-w-3xl p-6"):
             ui.label("➕ Нов примес").classes("text-lg font-bold mb-2")
@@ -47,7 +48,7 @@ def show_layer_includes_dashboard():
                     "includetext": includetext.value,
                     "includesize": includesize.value,
                     "includeconc": includeconc.value,
-                    "recordenteredon": recordenteredon.value or str(date.today())
+                    "recordenteredon": recordenteredon.value or str(date.today()),
                 }
                 resp = create_layer_include(data)
                 if resp and resp.status_code == 200:
@@ -119,17 +120,6 @@ def show_layer_includes_dashboard():
 
         confirm.open()
 
-    # === 🔍 Филтри ===
-    filter_text = ui.input("Търси по описание...").props("clearable").classes("w-1/3")
-    filter_type = ui.select([""] + enum_includetype, label="Тип примес").classes("w-1/6")
-    filter_conc = ui.select([""] + enum_includeconc, label="Концентрация").classes("w-1/6")
-
-    with ui.row().classes("items-center gap-4 w-full pb-4"):
-        filter_text
-        filter_type
-        filter_conc
-        ui.button("🔄 Обнови", on_click=lambda: refresh_table()).classes("bg-blue-500 text-white")
-
     # === 🔄 Таблица ===
     def refresh_table():
         table_container.clear()
@@ -138,7 +128,6 @@ def show_layer_includes_dashboard():
             ui.label("⚠️ Няма въведени примеси.").classes("text-gray-500 italic")
             return
 
-        # 🧮 Филтриране на резултатите
         filtered_includes = []
         for inc in includes:
             if filter_text.value and filter_text.value.lower() not in (inc.get("includetext") or "").lower():
@@ -161,19 +150,51 @@ def show_layer_includes_dashboard():
 
         with table_container:
             table = ui.table(columns=columns, rows=rows, row_key="includeid", pagination=10)
+            table.classes("w-full text-sm")
             table.add_slot("body-cell-actions", '''
                 <q-td :props="props">
-                    <q-btn size="sm" color="primary" flat icon="edit" @click="() => $parent.$emit('edit', props.row.actions)" />
-                    <q-btn size="sm" color="negative" flat icon="delete" @click="() => $parent.$emit('delete', props.row.actions)" />
+                    <q-btn size="sm" color="primary" flat icon="edit"
+                           @click="() => $parent.$emit('edit', props.row.actions)" />
+                    <q-btn size="sm" color="negative" flat icon="delete"
+                           @click="() => $parent.$emit('delete', props.row.actions)" />
                 </q-td>
             ''')
             table.on("edit", lambda e: open_edit_dialog(e.args))
-            table.on("delete", lambda e: confirm_delete(e.args))
+            ui.on("delete", lambda e: confirm_delete(e.args))
 
-    # === Заглавие и бутон ===
-    with ui.row().classes("justify-between w-full py-4"):
-        ui.label("⚗️ Управление на примеси").classes("text-xl font-bold")
-        ui.button("➕ Нов примес", on_click=open_create_dialog).classes("bg-blue-500 text-white")
+    # === Ляв панел + Таблица ===
+    with ui.row().classes("w-full items-start no-wrap"):
+        # 🎛️ Ляв панел (бутони и филтри)
+        with ui.column().classes(
+            "w-[5%] min-w-[180px] gap-2 p-2 bg-gray-50 rounded-xl shadow-md sticky top-2 h-[90vh] overflow-auto"
+        ):
+            ui.label("⚗️ Управление на примеси").classes("text-lg font-bold mb-2")
+
+            ui.button("➕ Нов примес", on_click=open_create_dialog).classes("bg-blue-500 text-white w-full")
+
+            ui.separator().classes("my-2")
+
+            ui.label("🔍 Филтриране по:").classes("text-md font-semibold mb-2")
+
+            filter_text = ui.input("Описание").props("clearable").classes("w-full")
+            filter_type = ui.select([""] + enum_includetype, label="Тип примес").classes("w-full")
+            filter_conc = ui.select([""] + enum_includeconc, label="Концентрация").classes("w-full")
+
+            ui.separator().classes("my-2")
+
+            ui.button("🎯 Приложи", on_click=lambda: refresh_table()).classes("bg-green-600 text-white w-full")
+
+            def reset_filters():
+                filter_text.value = ""
+                filter_type.value = ""
+                filter_conc.value = ""
+                refresh_table()
+
+            ui.button("♻️ Нулирай", on_click=reset_filters).classes("bg-gray-400 text-white w-full")
+
+        # 📋 Таблица вдясно
+        with ui.column().classes("w-[90%] p-1 overflow-auto"):
+            table_container = ui.column().classes("w-full")
 
     # === Първоначално зареждане ===
     refresh_table()

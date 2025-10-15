@@ -5,13 +5,13 @@ from frontend.archaeology.api import (
     create_pok,
     update_pok,
     delete_pok,
-    get_layers,   # 🆕 за dropdown избор на локация
+    get_layers,   # за dropdown избор на локация
 )
 
-def show_pok_dashboard():
-    """Главен панел за управление на таблица tblpok"""
 
-    # --- Полета и преводи ---
+def show_pok_dashboard():
+    """Главен панел за управление на таблица tblpok (ляво: контроли, дясно: таблица)."""
+
     field_labels = {
         "pokid": "ID",
         "locationid": "Локация ID",
@@ -22,22 +22,20 @@ def show_pok_dashboard():
         "recordenteredon": "Въведен на",
     }
 
+    # контейнер за таблицата (ще се запълва в refresh_table)
     table_container = ui.column().classes("w-full")
 
-    # 🆕 Зареждане на локациите за dropdown
+    # зареждаме локациите за dropdown (използваме при диалозите)
     layers = get_layers() or []
     layers_options = {str(l["layerid"]): f"{l['layerid']} – {l.get('layername', '')}" for l in layers}
 
-    # === 🟢 Нов запис ===
+    # === функции за CRUD диалози (използвани под таблицата) ===
     def open_create_dialog():
         with ui.dialog() as dialog, ui.card().classes("w-full max-w-2xl p-6"):
             ui.label("➕ Нов POK запис").classes("text-lg font-bold mb-2")
 
             with ui.grid(columns=2).classes("gap-4"):
-                # locationid = ui.input("Локация ID").props("type=number")
-                # 🆕 dropdown вместо input
                 selected_layer = ui.select(options=layers_options, label="Локация")
-
                 type_field = ui.input("Тип")
                 quantity = ui.input("Количество").props("type=number")
                 weight = ui.input("Тегло (гр.)").props("type=number step=0.001")
@@ -67,13 +65,11 @@ def show_pok_dashboard():
 
         dialog.open()
 
-    # === ✏️ Редактиране ===
     def open_edit_dialog(pok):
         with ui.dialog() as dialog, ui.card().classes("w-full max-w-2xl p-6"):
             ui.label(f"✏️ Редакция на POK #{pok['pokid']}").classes("text-lg font-bold mb-2")
 
             with ui.grid(columns=2).classes("gap-4"):
-                # selected_layer = ui.input("Локация ID", value=pok.get("locationid", ""))
                 selected_layer = ui.select(options=layers_options, label="Локация")
                 type_field = ui.input("Тип", value=pok.get("type", ""))
                 quantity = ui.input("Количество", value=pok.get("quantity", "")).props("type=number")
@@ -104,7 +100,6 @@ def show_pok_dashboard():
 
         dialog.open()
 
-    # === 🗑️ Изтриване ===
     def confirm_delete(pok):
         with ui.dialog() as confirm, ui.card().classes("w-full max-w-md p-4"):
             ui.label(f"❗ Изтриване на POK #{pok.get('pokid')}?").classes("text-lg")
@@ -124,7 +119,43 @@ def show_pok_dashboard():
 
         confirm.open()
 
-    # === Таблица ===
+    # === Лява колона (контроли) и дясна колона (таблица) ===
+    # Следваме оформлението на dashboard_layers: ляв панел ~10% (sticky), дясна - 90%.
+    with ui.row().classes("w-full items-start no-wrap"):
+
+        # Ляв панел — ~10% (min width to keep usable)
+        with ui.column().classes(
+            "w-[10%] min-w-[180px] gap-2 p-2 bg-gray-50 rounded-xl shadow-md sticky top-2 h-[90vh] overflow-auto"
+        ):
+            ui.label("📐 Управление на POK").classes("text-lg font-bold mb-2")
+
+            # Нов запис бутон
+            ui.button("➕ Нов запис", on_click=open_create_dialog).classes("bg-blue-500 text-white w-full")
+
+            ui.separator().classes("my-2")
+            ui.label("🔍 Филтри").classes("text-md font-semibold mb-2")
+
+            # Филтри (публични променливи, използвани в refresh_table)
+            filter_type = ui.input("Тип").props("clearable").classes("w-full")
+            filter_quantity = ui.input("Количество").props("type=number clearable").classes("w-full")
+
+            ui.separator().classes("my-2")
+
+            # Приложи / Нулирай бутони (под филтрите)
+            ui.button("🎯 Приложи", on_click=lambda: refresh_table()).classes("bg-green-600 text-white w-full")
+
+            def reset_filters():
+                filter_type.value = ""
+                filter_quantity.value = ""
+                refresh_table()
+
+            ui.button("♻️ Нулирай", on_click=reset_filters).classes("bg-gray-400 text-white w-full")
+
+        # Дясна колона — таблица (90%)
+        with ui.column().classes("w-[90%] p-1 overflow-auto"):
+            table_container = ui.column().classes("w-full")
+
+    # === Функция за попълване/refresh на таблицата ===
     def refresh_table():
         table_container.clear()
         pok_list = get_pok()
@@ -132,14 +163,31 @@ def show_pok_dashboard():
             ui.label("⚠️ Няма въведени POK записи.").classes("text-gray-500 italic")
             return
 
+        # Прилагаме филтрите от левия панел
+        filtered = []
+        for p in pok_list:
+            # филтър по тип (частично търсене, case-insensitive)
+            if filter_type.value and filter_type.value.lower() not in (str(p.get("type", "")) or "").lower():
+                continue
+            # филтър по количество (точно съвпадение, ако е зададено)
+            if filter_quantity.value:
+                try:
+                    if int(p.get("quantity", 0)) != int(filter_quantity.value):
+                        continue
+                except Exception:
+                    # ако input-a не може да се преобразува -> прескочи филтъра
+                    pass
+            filtered.append(p)
+
+        # Подготовка на колони (последната колона е с етикет "Управление на POK")
         columns = [
             {"name": key, "label": field_labels[key], "field": key, "sortable": True}
             for key in field_labels.keys()
         ]
-        columns.append({"name": "actions", "label": "Действия", "field": "actions"})
+        columns.append({"name": "actions", "label": "Управление на POK", "field": "actions"})
 
         rows = []
-        for p in pok_list:
+        for p in filtered:
             row = {k: (p.get(k) if p.get(k) is not None else "-") for k in field_labels.keys()}
             row["actions"] = p
             rows.append(row)
@@ -156,10 +204,5 @@ def show_pok_dashboard():
             table.on("edit", lambda e: open_edit_dialog(e.args))
             table.on("delete", lambda e: confirm_delete(e.args))
 
-    # === Заглавие и бутон ===
-    with ui.row().classes("justify-between w-full py-4"):
-        ui.label("📐 Управление на POK").classes("text-xl font-bold")
-        ui.button("➕ Нов запис", on_click=open_create_dialog).classes("bg-blue-500 text-white")
-
-    # === Зареждане на таблицата ===
+    # първоначално зареждане
     refresh_table()
