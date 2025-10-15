@@ -264,7 +264,7 @@ def show_layers_dashboard():
     with ui.row().classes("w-full items-start no-wrap"):
         # 🧭 Ляв панел — 10%
         with ui.column().classes(
-                "w-[10%] min-w-[220px] gap-4 p-3 bg-gray-50 rounded-xl shadow-md sticky top-4 h-[90vh] overflow-auto"
+                "w-[5%] min-w-[180px] gap-2 p-2 bg-gray-50 rounded-xl shadow-md sticky top-2 h-[90vh] overflow-auto"
         ):
             ui.label("⛏️ Управление на пластове").classes("text-lg font-bold mb-2")
 
@@ -274,9 +274,9 @@ def show_layers_dashboard():
 
             ui.separator().classes("my-2")
 
-            ui.label("🔍 Филтриране").classes("text-md font-semibold mb-2")
+            ui.label("🔍 Филтриране по:").classes("text-md font-semibold mb-2")
 
-            filter_name = ui.input("Търси по име на пласт...").props("clearable").classes("w-full")
+            filter_name = ui.input("Име на пласт").props("clearable").classes("w-full")
             filter_type = ui.select(
                 ["", "механичен", "контекст"], label="Тип пласт"
             ).classes("w-full")
@@ -289,7 +289,7 @@ def show_layers_dashboard():
             ui.separator().classes("my-2")
 
             # ---Бутони под филтрите---
-            ui.button("🎯 Приложи филтри", on_click=lambda: refresh_table()).classes(
+            ui.button("🎯 Приложи", on_click=lambda: refresh_table()).classes(
                 "bg-green-600 text-white w-full"
             )
 
@@ -305,7 +305,7 @@ def show_layers_dashboard():
                 )
 
         # 📋 Таблица вдясно — 90%
-        with ui.column().classes("w-[90%] p-4 overflow-auto"):
+        with ui.column().classes("w-[90%] p-1 overflow-auto"):
             table_container = ui.column().classes("w-full")
 
     # === Начално зареждане ===
