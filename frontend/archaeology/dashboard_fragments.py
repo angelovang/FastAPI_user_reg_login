@@ -50,6 +50,11 @@ def show_fragments_dashboard():
 
     table_container = ui.column().classes("w-full")
 
+    # Текущ потребител
+    from frontend.common.session import get_session
+    session = get_session()
+    current_user = session.get("username", "")
+
     # === CRUD функции ===
 
     def open_create_dialog():
@@ -213,12 +218,19 @@ def show_fragments_dashboard():
         with table_container:
             table = ui.table(columns=columns, rows=rows, row_key="fragmentid", pagination=10)
             table.classes("w-full text-sm")
-            table.add_slot("body-cell-actions", '''
-                <q-td :props="props">
-                    <q-btn size="sm" color="primary" flat icon="edit" @click="() => $parent.$emit('edit', props.row.actions)" />
-                    <q-btn size="sm" color="negative" flat icon="delete" @click="() => $parent.$emit('delete', props.row.actions)" />
-                </q-td>
-            ''')
+            table.add_slot("body-cell-actions", f'''
+                 <q-td :props="props">
+                     <template v-if="props.row.actions.recordenteredby === '{current_user}'">
+                         <q-btn size="sm" color="primary" flat icon="edit"
+                             @click="() => $parent.$emit('edit', props.row.actions)" />
+                         <q-btn size="sm" color="negative" flat icon="delete"
+                             @click="() => $parent.$emit('delete', props.row.actions)" />
+                     </template>
+                     <template v-else>
+                         <q-icon name="lock" color="grey" size="sm" />
+                     </template>
+                 </q-td>
+             ''')
             table.on("edit", lambda e: open_edit_dialog(e.args))
             table.on("delete", lambda e: confirm_delete(e.args))
 

@@ -9,7 +9,7 @@ from frontend.archaeology.dashboard_ornaments import show_ornaments_dashboard
 # """Страница за управление на археологическите пластове"""
 @ui.page('/layers')
 def layers_page():
-    add_header()
+    # add_header()
     add_subnav()
     with ui.row().classes("items-center justify-center w-full p-4"):
         show_layers_dashboard()
@@ -18,7 +18,7 @@ def layers_page():
 # """Страница за управление на примеси"""
 @ui.page('/layer_includes')
 def includes_page():
-    add_header()
+    # add_header()
     add_subnav()
     with ui.row().classes("items-center justify-center w-full p-4"):
         show_layer_includes_dashboard()
@@ -27,7 +27,7 @@ def includes_page():
 # Страница за управление на фрагменти
 @ui.page('/fragments')
 def fragments_page():
-    add_header()
+    # add_header()
     add_subnav()
     with ui.row().classes("items-center justify-center w-full p-4"):
         show_fragments_dashboard()
@@ -36,7 +36,7 @@ def fragments_page():
 # Страница за управление на ПОК
 @ui.page('/pok')
 def pok_page():
-    add_header()
+    # add_header()
     add_subnav()
     with ui.row().classes("items-center justify-center w-full p-4"):
         show_pok_dashboard()
@@ -45,7 +45,7 @@ def pok_page():
 # Страница за управление на орнаменти
 @ui.page('/ornaments')
 def ornaments_page():
-    add_header()
+    # add_header()
     add_subnav()
     with ui.row().classes("items-center justify-center w-full p-4"):
         show_ornaments_dashboard()

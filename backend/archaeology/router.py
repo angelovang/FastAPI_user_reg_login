@@ -41,7 +41,7 @@ def read_layer(layerid: int, db: Session = Depends(get_db)):
 # -----------------------
 @router.put("/layers/{layerid}", response_model=schemas.Tbllayer)
 def update_layer(layerid: int, layer: schemas.TbllayerUpdate, db: Session = Depends(get_db)):
-    db_layer = crud.update_layer(db, layerid, layer)
+    db_layer = crud.update_layer(db, layerid, layer, )
     if not db_layer:
         raise HTTPException(status_code=404, detail="Layer not found")
     return db_layer
