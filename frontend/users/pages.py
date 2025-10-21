@@ -46,10 +46,12 @@ def login_page():
             password = ui.input("Парола", password=True)
 
             async def login_action():
-                response = await async_request("POST", "/users/login/", {
-                    "username": username.value,
-                    "password": password.value,
-                })
+                user_data = {
+                    "username": getattr(username, "value", username),
+                    "password": getattr(password, "value", password),
+                }
+                response = await async_request("POST", "/users/login/", json=user_data)
+
                 if response and response.status_code == 200:
                     data = response.json()
                     session = {
