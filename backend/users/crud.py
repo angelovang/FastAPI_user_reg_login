@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from backend.users import models, schemas
-from typing import Optional
+from backend.users.models import User
 
 
-def authenticate_user(db: Session, username: str, password: str) -> Optional[models.User]:
+def authenticate_user(db: Session, username: str, password: str) -> type[User] | None:
     """Връща потребителя, ако username и password са валидни, иначе None"""
     user = db.query(models.User).filter(models.User.username == username).first()
     if not user:
