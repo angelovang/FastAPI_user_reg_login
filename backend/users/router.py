@@ -5,6 +5,7 @@ from typing import List
 from backend.database import get_db
 from . import crud, schemas
 from backend.auth import create_access_token
+from .utils import validate_password_strength
 
 router = APIRouter(
     prefix="/users",
@@ -31,6 +32,7 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
 # ---------------- CREATE ----------------
 @router.post("/", response_model=schemas.UserOut)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # validate_password_strength(user.password)  # <-- централизирана проверка !!! ДА се сложи при продукция !!!
     db_user = crud.get_user_by_username(db, username=user.username)
     if db_user:
         raise HTTPException(status_code=400, detail="Username already registered")
@@ -60,6 +62,8 @@ def change_password(user_id: int, passwords: schemas.PasswordChange, db: Session
 
     if not db_user.check_password(passwords.old_password):
         raise HTTPException(status_code=400, detail="Старият парола е грешна")
+
+    # validate_password_strength(passwords.new_password)  # <-- централизирана проверка !!! ДА се сложи при продукция !!!
 
     db_user.set_password(passwords.new_password)
     db.commit()
