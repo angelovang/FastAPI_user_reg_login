@@ -7,3 +7,8 @@ pydantic[email]
 python-jose
 requests
 nicegui
+# Добавени след корекциите за асинхронните операции
+python-multipart
+passlib[bcrypt]
+aiosqlite
+python-dotenv
