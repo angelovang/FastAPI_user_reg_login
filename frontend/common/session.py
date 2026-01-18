@@ -1,4 +1,5 @@
-from nicegui import ui
+from functools import wraps
+from nicegui import ui, context
 
 # глобална променлива за сесията - подлежи на обсъждане за сигурността
 current_session = {}

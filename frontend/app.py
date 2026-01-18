@@ -5,7 +5,6 @@ from frontend.archaeology.pages import *
 from frontend.users.dashboard import show_dashboard
 
 
-
 @ui.page('/')
 def main_page():
     add_header()

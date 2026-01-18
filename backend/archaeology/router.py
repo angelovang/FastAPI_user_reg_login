@@ -12,23 +12,21 @@ router = APIRouter(
 )
 
 # ---------- Layers -------------
-# -----------------------
-# CREATE
-# -----------------------
+
+#---------- CREATE ---------
+
 @router.post("/layers/", response_model=schemas.Tbllayer)
 def create_layer(layer: schemas.TbllayerCreate, db: Session = Depends(get_db)):
     return crud.create_layer(db, layer)
 
-# -----------------------
-# READ ALL
-# -----------------------
+#---------- READ ALL --------
+
 @router.get("/layers/", response_model=List[schemas.Tbllayer])
 def read_layers(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_layers(db, skip=skip, limit=limit)
 
-# -----------------------
-# READ BY ID
-# -----------------------
+#--------- READ BY ID -------
+
 @router.get("/layers/{layerid}", response_model=schemas.Tbllayer)
 def read_layer(layerid: int, db: Session = Depends(get_db)):
     db_layer = crud.get_layer(db, layerid)
@@ -36,9 +34,8 @@ def read_layer(layerid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Layer not found")
     return db_layer
 
-# -----------------------
-# UPDATE
-# -----------------------
+#--------- UPDATE ----------
+
 @router.put("/layers/{layerid}", response_model=schemas.Tbllayer)
 def update_layer(layerid: int, layer: schemas.TbllayerUpdate, db: Session = Depends(get_db)):
     db_layer = crud.update_layer(db, layerid, layer, )
@@ -46,9 +43,9 @@ def update_layer(layerid: int, layer: schemas.TbllayerUpdate, db: Session = Depe
         raise HTTPException(status_code=404, detail="Layer not found")
     return db_layer
 
-# -----------------------
-# DELETE
-# -----------------------
+
+#-------- DELETE -----------
+
 @router.delete("/layers/{layerid}", response_model=schemas.Tbllayer)
 def delete_layer(layerid: int, db: Session = Depends(get_db)):
     db_layer = crud.delete_layer(db, layerid)
@@ -58,18 +55,20 @@ def delete_layer(layerid: int, db: Session = Depends(get_db)):
 
 
 # ----------- Includes ----------------
-# -----------------------
-# TBL LAYER INCLUDES
-# -----------------------
+
+#----------- CREATE -----------
+
 @router.post("/layer_includes/", response_model=schemas.Tbllayerinclude)
 def create_include(include: schemas.TbllayerincludeCreate, db: Session = Depends(get_db)):
     return crud.create_layer_include(db, include)
 
+#----------- READ ALL -------------
 
 @router.get("/layer_includes/", response_model=List[schemas.Tbllayerinclude])
 def read_includes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return crud.get_layer_includes(db, skip=skip, limit=limit)
 
+# ---------- READ BY ID --------
 
 @router.get("/layer_includes/{includeid}", response_model=schemas.Tbllayerinclude)
 def read_include(includeid: int, db: Session = Depends(get_db)):
@@ -78,6 +77,7 @@ def read_include(includeid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Include not found")
     return db_include
 
+#----------- UPDATE ----------
 
 @router.put("/layer_includes/{includeid}", response_model=schemas.Tbllayerinclude)
 def update_include(includeid: int, include: schemas.TbllayerincludeUpdate, db: Session = Depends(get_db)):
@@ -86,6 +86,7 @@ def update_include(includeid: int, include: schemas.TbllayerincludeUpdate, db: S
         raise HTTPException(status_code=404, detail="Include not found")
     return db_include
 
+#------------ DELETE ---------
 
 @router.delete("/layer_includes/{includeid}", response_model=schemas.Tbllayerinclude)
 def delete_include(includeid: int, db: Session = Depends(get_db)):
@@ -138,13 +139,13 @@ def delete_fragment(fragmentid: int, db: Session = Depends(get_db)):
 
 # --------------- POK -----------------
 
-# 🟢 Всички записи
+# ----------- READ ALL ------------
 @router.get("/pok", response_model=list[schemas.PokOut])
 def get_poks(db: Session = Depends(get_db)):
     return crud.get_poks(db)
 
 
-# 🟢 Един запис по ID
+# ----------- READ BY ID ----------
 @router.get("/pok/{pokid}", response_model=schemas.PokOut)
 def get_pok(pokid: int, db: Session = Depends(get_db)):
     pok = crud.get_pok_by_id(db, pokid)
@@ -153,13 +154,13 @@ def get_pok(pokid: int, db: Session = Depends(get_db)):
     return pok
 
 
-# 🟢 Създаване
+# ----------- CREATE -----------
 @router.post("/pok", response_model=schemas.PokOut)
 def create_pok(pok: schemas.PokCreate, db: Session = Depends(get_db)):
     return crud.create_pok(db, pok)
 
 
-# 🟡 Обновяване
+# ---------- UPDATE -------------
 @router.put("/pok/{pokid}", response_model=schemas.PokOut)
 def update_pok(pokid: int, pok_data: schemas.PokUpdate, db: Session = Depends(get_db)):
     pok = crud.update_pok(db, pokid, pok_data)
@@ -168,7 +169,7 @@ def update_pok(pokid: int, pok_data: schemas.PokUpdate, db: Session = Depends(ge
     return pok
 
 
-# 🔴 Изтриване
+# ---------- DELETE -------------
 @router.delete("/pok/{pokid}")
 def delete_pok(pokid: int, db: Session = Depends(get_db)):
     success = crud.delete_pok(db, pokid)
@@ -179,17 +180,17 @@ def delete_pok(pokid: int, db: Session = Depends(get_db)):
 
 # --------------- Ornaments ---------------
 
-# Списък с всички орнаменти
+# ---------- READ ALL --------------
 @router.get("/ornaments/", response_model=list[schemas.OrnamentOut])
 def read_ornaments(db: Session = Depends(get_db)):
     return crud.get_all_ornaments(db)
 
-# Създаване на орнамент
+# ---------- CREATE -------------
 @router.post("/ornaments/", response_model=schemas.OrnamentOut)
 def create_ornament(ornament: schemas.OrnamentCreate, db: Session = Depends(get_db)):
     return crud.create_ornament(db, ornament)
 
-# Единичен запис по ID
+# ---------- READ BY ID ------------
 @router.get("/ornaments/{ornamentid}", response_model=schemas.OrnamentOut)
 def read_ornament(ornamentid: int, db: Session = Depends(get_db)):
     db_ornament = crud.get_ornament(db, ornamentid)
@@ -197,7 +198,7 @@ def read_ornament(ornamentid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Ornament not found")
     return db_ornament
 
-# Обновяване
+# ---------- UPDATE ------------
 @router.put("/ornaments/{ornamentid}", response_model=schemas.OrnamentOut)
 def update_ornament(ornamentid: int, ornament: schemas.OrnamentUpdate, db: Session = Depends(get_db)):
     db_ornament = crud.update_ornament(db, ornamentid, ornament)
@@ -205,7 +206,7 @@ def update_ornament(ornamentid: int, ornament: schemas.OrnamentUpdate, db: Sessi
         raise HTTPException(status_code=404, detail="Ornament not found")
     return db_ornament
 
-# Изтриване
+# --------- DELETE -----------
 @router.delete("/ornaments/{ornamentid}")
 def delete_ornament(ornamentid: int, db: Session = Depends(get_db)):
     db_ornament = crud.delete_ornament(db, ornamentid)

@@ -16,6 +16,7 @@ def _get_user_storage():
     """Безопасен достъп до session storage на текущия клиент в NiceGUI 3.x"""
     try:
         client = context.get_client()
+        print("test!!!!!!!!!!!", client)
         if client and hasattr(client, 'storage'):
             return client.storage.user
     except Exception:

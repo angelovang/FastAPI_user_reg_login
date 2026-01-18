@@ -2,7 +2,7 @@ from nicegui import ui
 from frontend.common.layout import add_header, add_subnav
 from frontend.users.api import register_user, get_users, update_user, delete_user, change_password
 from frontend.common.session import set_session
-from frontend.common.api import async_request
+from frontend.common.api import async_request, _get_user_storage
 
 
 @ui.page('/register')
